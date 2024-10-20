@@ -3,16 +3,19 @@ import java.io.File;
 import java.io.File;
 import java.io.IOException;
 
+import com.jayway.jsonpath.JsonPath;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
 import io.restassured.response.Response;
 import org.apache.commons.io.FileUtils;
 import io.qameta.allure.*;
+import org.testng.Assert;
 import org.testng.annotations.Test;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 //import com.testautomation.apitesting.listener.RestAssuredListener;
+import net.minidev.json.JSONArray;
 
 import java.io.IOException;
 
@@ -65,5 +68,12 @@ public class AllureReportGeneration {
 
         System.out.println("Smi > "+response.body().asString());
         System.out.println("Smi > Done");
+        JSONArray jsonArray = JsonPath.read(response.body().asString(), "$.booking..firstname");
+        String firstName = (String) jsonArray.get(0);
+
+        Assert.assertEquals(firstName, "api testing");
+
+        int bookingId = JsonPath.read(response.body().asString(), "$.bookingid");
+        System.out.println("Booking Id : " + bookingId);
     }
 }
