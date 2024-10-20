@@ -34,9 +34,13 @@ public class AllureReportGeneration {
         logger.info("e2eAPIRequest test execution started...");
 
         try {
+            String url = "https://restful-booker.herokuapp.com/booking";
             String postAPIRequestBody = FileUtils.readFileToString(new File("./src/test/resources/payload/postapi.txt"),
                     "UTF-8");
-            PostApi(postAPIRequestBody);
+            int bookingId = PostApi(url, postAPIRequestBody);
+
+            GetApi(url,bookingId);
+
             //throw new IOException();
 
         }
@@ -47,7 +51,7 @@ public class AllureReportGeneration {
         logger.info("e2eAPIRequest test execution ended...");
 
     }
-    private void PostApi(String postAPIRequestBody){
+    private int PostApi(String url, String postAPIRequestBody){
 
         System.out.println("Payload = " + postAPIRequestBody);
         AllureRestAssured allureFilter = new AllureRestAssured();
@@ -57,7 +61,7 @@ public class AllureReportGeneration {
                 .given().filter(allureFilter)
                 //.filter(new RestAssuredListener())
                 .contentType(ContentType.JSON).body(postAPIRequestBody)
-                .baseUri("https://restful-booker.herokuapp.com/booking")
+                .baseUri(url)
                 .when()
                 .post()
                 .then()
@@ -72,8 +76,24 @@ public class AllureReportGeneration {
         String firstName = (String) jsonArray.get(0);
 
         Assert.assertEquals(firstName, "api testing");
-
+        System.out.println("PostBody response" + response.body().asString());
         int bookingId = JsonPath.read(response.body().asString(), "$.bookingid");
         System.out.println("Booking Id : " + bookingId);
+        return bookingId;
+    }
+
+    private void GetApi(String url, int bookingId){
+        // get api call
+        RestAssured
+                .given().filter(new AllureRestAssured())
+                //.filter(new RestAssuredListener())
+                .contentType(ContentType.JSON)
+                .baseUri(url)
+                .when()
+                .get("/{bookingId}", bookingId)
+                .then()
+                .assertThat()
+                .statusCode(200);
+        System.out.println("GetAPi executed");
     }
 }
