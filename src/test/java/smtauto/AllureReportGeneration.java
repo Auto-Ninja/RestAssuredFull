@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 
 import com.jayway.jsonpath.JsonPath;
+import constants.ApplicationConstants;
 import io.qameta.allure.restassured.AllureRestAssured;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -37,9 +38,13 @@ public class AllureReportGeneration {
             String url = "https://restful-booker.herokuapp.com/booking";
             String postAPIRequestBody = FileUtils.readFileToString(new File("./src/test/resources/payload/postapi.txt"),
                     "UTF-8");
+            String tokenAPIRequestBody = FileUtils.readFileToString(new File(ApplicationConstants.TOKEN_API_REQUEST_BODY),
+                    "UTF-8");
             int bookingId = PostApi(url, postAPIRequestBody);
 
             GetApi(url,bookingId);
+
+            TokenApi(ApplicationConstants.URL_TOKEN_API,tokenAPIRequestBody);
 
             //throw new IOException();
 
@@ -96,4 +101,26 @@ public class AllureReportGeneration {
                 .statusCode(200);
         System.out.println("GetAPi executed");
     }
+
+    private void TokenApi(String url,String tokenAPIRequestBody){
+        // token generation
+        Response tokenAPIResponse = RestAssured
+                .given().filter(new AllureRestAssured())
+                //.filter(new RestAssuredListener())
+                .contentType(ContentType.JSON)
+                .body(tokenAPIRequestBody)
+                .baseUri(url)
+                .when()
+                .post()
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .extract()
+                .response();
+
+        String token = JsonPath.read(tokenAPIResponse.body().asString(), "$.token");
+        System.out.println("Token Id : " + token);
+    }
+
+
 }
