@@ -86,7 +86,6 @@ public class AllureReportGeneration {
         System.out.println("Booking Id : " + bookingId);
         return bookingId;
     }
-
     private void GetApi(String url, int bookingId){
         // get api call
         RestAssured
@@ -101,7 +100,6 @@ public class AllureReportGeneration {
                 .statusCode(200);
         System.out.println("GetAPi executed");
     }
-
     private void TokenApi(String url,String tokenAPIRequestBody){
         // token generation
         Response tokenAPIResponse = RestAssured
