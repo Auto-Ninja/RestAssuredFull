@@ -20,6 +20,8 @@ import net.minidev.json.JSONArray;
 
 import java.io.IOException;
 
+import static org.hamcrest.Matchers.equalTo;
+
 
 @Epic("Epic-01")
 @Feature("Create Update Delete Booking")
@@ -40,12 +42,18 @@ public class AllureReportGeneration {
                     "UTF-8");
             String tokenAPIRequestBody = FileUtils.readFileToString(new File(ApplicationConstants.TOKEN_API_REQUEST_BODY),
                     "UTF-8");
+            String putAPIRequestBody = FileUtils.readFileToString(new File(ApplicationConstants.PUT_API_REQUEST_BODY),
+                    "UTF-8");
+            String patchAPIRequestBody = FileUtils.readFileToString(new File(ApplicationConstants.PATCH_API_REQUEST_BODY),
+                    "UTF-8");
             int bookingId = PostApi(url, postAPIRequestBody);
 
             GetApi(url,bookingId);
 
-            TokenApi(ApplicationConstants.URL_TOKEN_API,tokenAPIRequestBody);
+            String token = TokenApi(ApplicationConstants.URL_TOKEN_API,tokenAPIRequestBody);
 
+            PutApi(token,putAPIRequestBody,bookingId);
+            PatchApi(token,patchAPIRequestBody,bookingId);
             //throw new IOException();
 
         }
@@ -100,7 +108,7 @@ public class AllureReportGeneration {
                 .statusCode(200);
         System.out.println("GetAPi executed");
     }
-    private void TokenApi(String url,String tokenAPIRequestBody){
+    private String  TokenApi(String url,String tokenAPIRequestBody){
         // token generation
         Response tokenAPIResponse = RestAssured
                 .given().filter(new AllureRestAssured())
@@ -118,7 +126,42 @@ public class AllureReportGeneration {
 
         String token = JsonPath.read(tokenAPIResponse.body().asString(), "$.token");
         System.out.println("Token Id : " + token);
+        return token;
     }
+    private void PutApi(String token,String putAPIRequestBody, int bookingId){
+        // put api call
+        Response response = RestAssured
+                .given().filter(new AllureRestAssured())
+                //.filter(new RestAssuredListener())
+                .contentType(ContentType.JSON)
+                .body(putAPIRequestBody)
+                .header("Cookie", "token=" + token)
+                .baseUri("https://restful-booker.herokuapp.com/booking")
+                .when()
+                .put("/{bookingId}", bookingId)
+                .then()
+                .assertThat()
+                .statusCode(200).body("firstname", equalTo("Specflow"))
+                .body("lastname", equalTo("Selenium C#")).extract().response();
+        System.out.println("Updated response : " + response.body().asString());
 
+    }
+    private void PatchApi(String token,String patchAPIRequestBody,int bookingId){
+        // patch api call
+        Response response = RestAssured
+                .given().filter(new AllureRestAssured())
+                //.filter(new RestAssuredListener())
+                .contentType(ContentType.JSON)
+                .body(patchAPIRequestBody)
+                .header("Cookie", "token=" + token)
+                .baseUri("https://restful-booker.herokuapp.com/booking")
+                .when()
+                .patch("/{bookingId}", bookingId)
+                .then()
+                .assertThat()
+                .statusCode(200)
+                .body("firstname", equalTo("Testers Talk")).extract().response();
+        System.out.println("New response : " + response.body().asString());
+    }
 
 }
